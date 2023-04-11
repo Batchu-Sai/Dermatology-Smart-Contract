@@ -7,14 +7,14 @@ contract Dermatology_IPFS {
 ////////////// INITIALIZE MAPPINGS AND ARRAYS
 
       // mappings to hold data values and and corresponding arrays for their keys
-      mapping (bytes32 => uint[]) diseases; //key = disease
+      mapping (bytes32 => uint[]) ALDEN_scores; //key = ALDEN_score
       mapping (bytes32 => uint[]) patientIDs; //key = patientID
-      mapping (string => uint[]) DrugNames; //key = DrugName
+      mapping (string => uint[]) BSA_involved_maximums; //key = BSA_involved_maximum
 
       mapping (uint => PatientDataStruct) database;
       // counter to assign each entry a unique index
       uint counter;
-      // array to hold the unique disease-patientIDNumber-drug entries
+      // array to hold the unique ALDEN_score-patientIDNumber-BSA_involved_maximum entries
       UniqueObservations[] uniqueObservationsArray;
 
 
@@ -22,36 +22,36 @@ contract Dermatology_IPFS {
 
     // Struct format to return data from query function.
     struct ObservationReturnStruct {
-        string disease;
+        string ALDEN_score;
         uint SCORTEN_predicted_mortality;
         uint patientID;
         uint BSA_involved_at_admission;
-        string DrugName;
+        string BSA_involved_maximum;
         bytes32 ipfsHash;
         //uint totalCount;
     }
     // struct to hold the data in database
     struct PatientDataStruct {
-        bytes32 diseaseField;
+        bytes32 ALDEN_scoreField;
         bytes32 SCORTEN_predicted_mortalityField;
         bytes32 patientIDField;
         bytes32 BSA_involved_at_admissionField;
-        string DrugNameField;
+        string BSA_involved_maximumField;
         bytes32 ipfsHashField;
         uint index;
         address whoAdded;
     }
-    // struct to hold unique cancer-patientID-drug combinations
+    // struct to hold unique ALDEN_score-patientID-BSA_involved_maximum
     struct UniqueObservations {
     	bytes32 disease;
     	bytes32 patientID;
-    	string DrugName;
+    	string BSA_involved_maximum;
     }
     // struct to check which fields were queried
     struct FieldQueries {
-        bool cancer;
+        bool ALDEN_score;
         bool patientIDNumber;
-        bool drug;
+        bool BSA_involved_max;
     }
 
 
@@ -63,7 +63,7 @@ contract Dermatology_IPFS {
         uint SCORTEN_predicted_mortality,
         uint patientID,
         uint BSA_involved_at_admission,
-        string memory DrugName,
+        string memory ALDEN_score,
         bytes32 ipfsHash
     ) public {
         bytes32 name = stringToBytes32(disease);
@@ -73,33 +73,33 @@ contract Dermatology_IPFS {
         bytes32 IPFS_hash = ipfsHash;
         address who = msg.sender;
 
-        // check if the cancer-patientIDNumber-drug combo already exists in the database. If not, add it to the uniqueObservationsArray
-        if (observationExists(disease, intToString(patientID), DrugName) == false) {
-            uniqueObservationsArray.push(UniqueObservations(name, patientIDNumber, DrugName));
+        // check if the ALDEN_score-patientIDNumber-BSA_involved_max combo already exists in the database. If not, add it to the uniqueObservationsArray
+        if (observationExists(disease, intToString(patientID), ALDEN_score) == false) {
+            uniqueObservationsArray.push(UniqueObservations(name, patientIDNumber, ALDEN_score));
         }
         // update the four mappings
         diseases[name].push(counter);
         patientIDs[patientIDNumber].push(counter);
-        DrugNames[DrugName].push(counter);
-        database[counter] = PatientDataStruct(name, grading, patientIDNumber, BSA_involved_at_admission_score, DrugName, IPFS_hash, counter, who);
+        ALDEN_scores[ALDEN_score].push(counter);
+        database[counter] = PatientDataStruct(name, grading, patientIDNumber, BSA_involved_at_admission_score, ALDEN_score, IPFS_hash, counter, who);
         // update global counter/index
         counter++;
     }
 
 
-// Takes disease, patientIDNumber, and drugname as strings. Asterisk "*" fconsidered as wildcard. Returns array of ObservationReturnStruct Structs which match the query parameters.
+// Takes BSA_max, patientIDNumber, and ALDEN_score as strings. Asterisk "*" fconsidered as wildcard. Returns array of ObservationReturnStruct Structs which match the query parameters.
  function retrieveRecord(
         string memory disease,
         string memory patientID,
-        string memory drug
+        string memory ALDEN_score
     ) public view returns (ObservationReturnStruct[] memory) {
         // initialize memory structs and variables
         uint numFields;
         FieldQueries memory queryInfo;
         ObservationReturnStruct[] memory empty;
-        uint[] memory diseaseSearch;
+        uint[] memory BSA_involved_maxSearch;
         uint[] memory patientIDSearch;
-        uint[] memory DrugNameSearch;
+        uint[] memory ALDEN_scoreSearch;
         uint[] memory indexSearch = new uint[](counter);
         UniqueObservations[] memory uniqueSearch = new UniqueObservations[](uniqueObservationsArray.length);
 
